@@ -4,6 +4,12 @@
 
 ## 使用
 
+如果只想安装最新版，请到 GitHub Releases 下载 `.dmg` 安装包：
+
+`https://github.com/t963891881-cell/screen-annotator/releases`
+
+也可以从源码构建：
+
 ```bash
 cd /Users/mac/Desktop/7654/screen-annotator
 ./scripts/build.sh
@@ -37,6 +43,14 @@ cd /Users/mac/Desktop/7654/screen-annotator
 构建完成后，可以把这个应用加入 macOS 登录项：
 
 `/Users/mac/Desktop/7654/screen-annotator/dist/ScreenAnnotator.app`
+
+## 打包 DMG
+
+```bash
+./scripts/create_dmg.sh 0.1.0
+```
+
+生成文件会放在 `dist/ScreenAnnotator-0.1.0.dmg`。
 
 ## 说明
 
