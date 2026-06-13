@@ -348,6 +348,7 @@ private final class AnnotationView: NSView {
         NSColor.systemBlue,
         NSColor.systemPurple
     ]
+    private let colorNames = ["红色", "黄色", "绿色", "蓝色", "紫色"]
 
     override var acceptsFirstResponder: Bool { true }
 
@@ -493,6 +494,10 @@ private final class AnnotationView: NSView {
         colors[colorIndex]
     }
 
+    private var currentColorName: String {
+        colorNames[colorIndex]
+    }
+
     private func normalizedRect(from first: NSPoint, to second: NSPoint) -> NSRect {
         NSRect(
             x: min(first.x, second.x),
@@ -625,7 +630,7 @@ private final class AnnotationView: NSView {
     }
 
     private func drawHelpStrip() {
-        let text = "当前：\(mode.title)  ·  \(ShortcutStore.display(for: .rectangle)) 矩形  ·  \(ShortcutStore.display(for: .arrow)) 箭头  ·  \(ShortcutStore.display(for: .step)) 步骤  ·  \(ShortcutStore.display(for: .brush)) 画笔  ·  \(ShortcutStore.display(for: .nextStep)) 下一步  ·  C 清空  ·  Esc 退出"
+        let text = "颜色：\(currentColorName)  ·  当前：\(mode.title)  ·  \(ShortcutStore.display(for: .rectangle)) 矩形  ·  \(ShortcutStore.display(for: .arrow)) 箭头  ·  \(ShortcutStore.display(for: .step)) 步骤  ·  \(ShortcutStore.display(for: .brush)) 画笔  ·  \(ShortcutStore.display(for: .nextStep)) 下一步  ·  R 换色  ·  C 清空  ·  Esc 退出"
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 14, weight: .medium),
             .foregroundColor: NSColor.white
@@ -634,17 +639,33 @@ private final class AnnotationView: NSView {
         let size = attributed.size()
         let paddingX: CGFloat = 16
         let paddingY: CGFloat = 9
+        let swatchSize: CGFloat = 14
+        let swatchGap: CGFloat = 9
         let stripRect = NSRect(
-            x: max(20, (bounds.width - size.width) / 2 - paddingX),
+            x: max(20, (bounds.width - size.width - swatchSize - swatchGap) / 2 - paddingX),
             y: bounds.height - size.height - 28 - paddingY * 2,
-            width: size.width + paddingX * 2,
+            width: size.width + swatchSize + swatchGap + paddingX * 2,
             height: size.height + paddingY * 2
         )
 
         let background = NSBezierPath(roundedRect: stripRect, xRadius: 8, yRadius: 8)
         NSColor.black.withAlphaComponent(0.54).setFill()
         background.fill()
-        attributed.draw(at: NSPoint(x: stripRect.minX + paddingX, y: stripRect.minY + paddingY))
+
+        let swatchRect = NSRect(
+            x: stripRect.minX + paddingX,
+            y: stripRect.midY - swatchSize / 2,
+            width: swatchSize,
+            height: swatchSize
+        )
+        let swatch = NSBezierPath(ovalIn: swatchRect)
+        currentColor.setFill()
+        swatch.fill()
+        NSColor.white.withAlphaComponent(0.88).setStroke()
+        swatch.lineWidth = 1.5
+        swatch.stroke()
+
+        attributed.draw(at: NSPoint(x: swatchRect.maxX + swatchGap, y: stripRect.minY + paddingY))
     }
 }
 

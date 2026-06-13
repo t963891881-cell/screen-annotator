@@ -34,6 +34,8 @@ cd /Users/mac/Desktop/7654/screen-annotator
 - `Space`: 切换轻微暗场聚焦
 - `Esc`: 清空并退出标注层
 
+标注层顶部会显示当前颜色圆点和颜色名称，按 `R` 切换颜色后会立即更新。
+
 ## 设置快捷键
 
 点击菜单栏 `✎` 图标，选择 `Settings...`，即可为矩形、箭头、步骤、自由画笔和下一步编号分别设置快捷键。保存后立即生效，并会自动记住配置。
@@ -47,10 +49,10 @@ cd /Users/mac/Desktop/7654/screen-annotator
 ## 打包 DMG
 
 ```bash
-./scripts/create_dmg.sh 0.1.0
+./scripts/create_dmg.sh 0.1.1
 ```
 
-生成文件会放在 `dist/ScreenAnnotator-0.1.0.dmg`。
+生成文件会放在 `dist/ScreenAnnotator-0.1.1.dmg`。
 
 ## 说明
 
