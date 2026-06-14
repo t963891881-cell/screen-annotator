@@ -630,7 +630,7 @@ private final class AnnotationView: NSView {
     }
 
     private func drawHelpStrip() {
-        let text = "颜色：\(currentColorName)  ·  当前：\(mode.title)  ·  \(ShortcutStore.display(for: .rectangle)) 矩形  ·  \(ShortcutStore.display(for: .arrow)) 箭头  ·  \(ShortcutStore.display(for: .step)) 步骤  ·  \(ShortcutStore.display(for: .brush)) 画笔  ·  \(ShortcutStore.display(for: .nextStep)) 下一步  ·  R 换色  ·  C 清空  ·  Esc 退出"
+        let text = "颜色：\(currentColorName)  ·  当前：\(mode.title)  ·  \(ShortcutStore.display(for: .rectangle)) 矩形  ·  \(ShortcutStore.display(for: .arrow)) 箭头  ·  \(ShortcutStore.display(for: .step)) 步骤  ·  \(ShortcutStore.display(for: .brush)) 画笔  ·  \(ShortcutStore.display(for: .nextStep)) 下一步  ·  R 换色  ·  Z 撤销  ·  C 清空  ·  Space 聚焦  ·  Esc 退出"
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 14, weight: .medium),
             .foregroundColor: NSColor.white

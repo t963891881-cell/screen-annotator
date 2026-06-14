@@ -49,10 +49,10 @@ cd /Users/mac/Desktop/7654/screen-annotator
 ## 打包 DMG
 
 ```bash
-./scripts/create_dmg.sh 0.1.1
+./scripts/create_dmg.sh 0.1.2
 ```
 
-生成文件会放在 `dist/ScreenAnnotator-0.1.1.dmg`。
+生成文件会放在 `dist/ScreenAnnotator-0.1.2.dmg`。
 
 ## 说明
 
