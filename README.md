@@ -49,11 +49,26 @@ cd /Users/mac/Desktop/7654/screen-annotator
 ## 打包 DMG
 
 ```bash
-./scripts/create_dmg.sh 0.1.2
+./scripts/create_dmg.sh 0.1.3
 ```
 
-生成文件会放在 `dist/ScreenAnnotator-0.1.2.dmg`。
+生成文件会放在 `dist/ScreenAnnotator-0.1.3.dmg`。
 
 ## 说明
 
 默认快捷键是 `Option + 1` 到 `Option + 5`。如果系统提示快捷键注册失败，说明对应组合被其他应用占用了，需要在源码里替换快捷键后重新构建。
+
+## macOS 安全提示
+
+当前 Release 使用本地 ad-hoc 签名，尚未使用 Apple Developer ID 公证。DMG 脚本会在打包前清理扩展属性并严格验证 app bundle 签名，但部分电脑从浏览器下载后，macOS 仍可能提示“不明开发者”。
+
+如果 macOS 明确提示“文件已损坏”，通常是下载隔离属性或未公证导致的 Gatekeeper 拦截，不一定是 DMG 真损坏。
+
+临时解决方式：
+
+```bash
+xattr -dr com.apple.quarantine /Applications/ScreenAnnotator.app
+open /Applications/ScreenAnnotator.app
+```
+
+面向公开用户稳定分发时，需要使用 Apple Developer ID 证书签名并提交 Apple notarization。
