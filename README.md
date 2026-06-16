@@ -28,6 +28,7 @@ cd /Users/mac/Desktop/7654/screen-annotator
 - `Option + 5`: 显示标注层，并把下一个步骤编号往后加 1
 - 鼠标拖拽: 绘制矩形、箭头或自由画笔
 - 鼠标点击: 放置步骤编号
+- 按住 `Shift`: 临时显示标注层；松开 `Shift` 会清空并隐藏标注层
 - `C`: 清空所有标注
 - `Z`: 撤销上一个标注
 - `R`: 切换标注颜色
@@ -49,10 +50,10 @@ cd /Users/mac/Desktop/7654/screen-annotator
 ## 打包 DMG
 
 ```bash
-./scripts/create_dmg.sh 0.1.3
+./scripts/create_dmg.sh 0.1.4
 ```
 
-生成文件会放在 `dist/ScreenAnnotator-0.1.3.dmg`。
+生成文件会放在 `dist/ScreenAnnotator-0.1.4.dmg`。
 
 ## 说明
 

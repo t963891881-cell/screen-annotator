@@ -484,6 +484,14 @@ private final class AnnotationView: NSView {
         needsDisplay = true
     }
 
+    func cancelCurrentGesture() {
+        currentRect = nil
+        currentPoint = nil
+        startPoint = nil
+        currentBrushPoints = []
+        needsDisplay = true
+    }
+
     func undo() {
         _ = annotations.popLast()
         nextStepNumber = max(1, nextStepNumber - 1)
@@ -673,6 +681,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, SettingsWindow
     private var windows: [OverlayWindow] = []
     private var hotKeyRefs: [EventHotKeyRef] = []
     private var eventHandlerRef: EventHandlerRef?
+    private var shiftMonitor: Any?
+    private var localShiftMonitor: Any?
+    private var isShiftHoldActive = false
     private var statusItem: NSStatusItem?
     private var settingsWindowController: SettingsWindowController?
 
@@ -680,6 +691,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, SettingsWindow
         NSApp.setActivationPolicy(.accessory)
         createWindows()
         createStatusItem()
+        installShiftHoldMonitors()
         registerHotKey()
     }
 
@@ -689,6 +701,12 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, SettingsWindow
         }
         if let eventHandlerRef {
             RemoveEventHandler(eventHandlerRef)
+        }
+        if let shiftMonitor {
+            NSEvent.removeMonitor(shiftMonitor)
+        }
+        if let localShiftMonitor {
+            NSEvent.removeMonitor(localShiftMonitor)
         }
     }
 
@@ -705,6 +723,31 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, SettingsWindow
             let view = window.contentView as? AnnotationView
             view?.setMode(.step)
             view?.incrementStepNumber()
+        }
+    }
+
+    private func installShiftHoldMonitors() {
+        shiftMonitor = NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+            DispatchQueue.main.async {
+                self?.handleModifierFlags(event.modifierFlags)
+            }
+        }
+        localShiftMonitor = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+            self?.handleModifierFlags(event.modifierFlags)
+            return event
+        }
+    }
+
+    private func handleModifierFlags(_ flags: NSEvent.ModifierFlags) {
+        let relevantFlags = flags.intersection([.shift, .control, .option, .command])
+        let isShiftOnly = relevantFlags == .shift
+
+        if isShiftOnly && !isShiftHoldActive {
+            isShiftHoldActive = true
+            showOverlay()
+        } else if !isShiftOnly && isShiftHoldActive {
+            isShiftHoldActive = false
+            clearAndHideOverlay()
         }
     }
 
@@ -776,6 +819,16 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, SettingsWindow
 
     private func hideOverlay() {
         for window in windows {
+            window.orderOut(nil)
+        }
+    }
+
+    private func clearAndHideOverlay() {
+        for window in windows {
+            if let view = window.contentView as? AnnotationView {
+                view.cancelCurrentGesture()
+                view.clear()
+            }
             window.orderOut(nil)
         }
     }
