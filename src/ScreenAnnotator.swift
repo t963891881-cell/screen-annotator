@@ -181,7 +181,7 @@ private final class SettingsWindowController: NSWindowController {
 
     convenience init(delegate: SettingsWindowControllerDelegate) {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 520, height: 360),
+            contentRect: NSRect(x: 0, y: 0, width: 620, height: 620),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false
@@ -215,7 +215,10 @@ private final class SettingsWindowController: NSWindowController {
         stack.addArrangedSubview(title)
         stack.addArrangedSubview(subtitle)
 
-        let header = row(labels: ["动作", "修饰键", "按键"], isHeader: true)
+        let configurableTitle = sectionLabel("可配置快捷键")
+        stack.addArrangedSubview(configurableTitle)
+
+        let header = row(labels: ["动作", "修饰键", "按键"], widths: [150, 160, 92], isHeader: true)
         stack.addArrangedSubview(header)
 
         for action in HotKeyAction.allCases {
@@ -249,6 +252,13 @@ private final class SettingsWindowController: NSWindowController {
             stack.addArrangedSubview(row)
         }
 
+        let fixedTitle = sectionLabel("固定快捷键说明")
+        stack.addArrangedSubview(fixedTitle)
+        stack.addArrangedSubview(row(labels: ["按键", "作用", "说明"], widths: [110, 150, 290], isHeader: true))
+        for item in fixedShortcuts() {
+            stack.addArrangedSubview(row(labels: item, widths: [110, 150, 290], isHeader: false))
+        }
+
         let buttons = NSStackView()
         buttons.orientation = .horizontal
         buttons.spacing = 10
@@ -273,12 +283,19 @@ private final class SettingsWindowController: NSWindowController {
         ])
     }
 
-    private func row(labels: [String], isHeader: Bool) -> NSStackView {
-        let widths: [CGFloat] = [150, 160, 92]
+    private func sectionLabel(_ text: String) -> NSTextField {
+        let field = NSTextField(labelWithString: text)
+        field.font = NSFont.systemFont(ofSize: 15, weight: .semibold)
+        field.textColor = .labelColor
+        return field
+    }
+
+    private func row(labels: [String], widths: [CGFloat], isHeader: Bool) -> NSStackView {
         let views = zip(labels, widths).map { label, width in
             let field = NSTextField(labelWithString: label)
             field.font = isHeader ? NSFont.systemFont(ofSize: 12, weight: .semibold) : NSFont.systemFont(ofSize: 13)
             field.textColor = isHeader ? .secondaryLabelColor : .labelColor
+            field.lineBreakMode = .byTruncatingTail
             field.widthAnchor.constraint(equalToConstant: width).isActive = true
             return field
         }
@@ -286,6 +303,19 @@ private final class SettingsWindowController: NSWindowController {
         row.orientation = .horizontal
         row.spacing = 12
         return row
+    }
+
+    private func fixedShortcuts() -> [[String]] {
+        [
+            ["按住 Shift", "临时显示", "松开后自动清空并隐藏标注层"],
+            ["R", "切换颜色", "在红、黄、绿、蓝、紫之间循环"],
+            ["Z", "撤销", "撤销上一个标注"],
+            ["C", "清空", "清空当前所有标注"],
+            ["Space", "聚焦", "切换轻微暗场背景"],
+            ["Esc", "退出", "清空并隐藏标注层"],
+            ["1 / 2 / 3 / 4", "切换工具", "标注层打开时临时切换矩形、箭头、步骤、画笔"],
+            ["5", "下一步", "标注层打开时把步骤编号往后加 1"]
+        ]
     }
 
     @objc private func save() {

@@ -41,6 +41,8 @@ cd /Users/mac/Desktop/7654/screen-annotator
 
 点击菜单栏 `✎` 图标，选择 `Settings...`，即可为矩形、箭头、步骤、自由画笔和下一步编号分别设置快捷键。保存后立即生效，并会自动记住配置。
 
+设置页还会列出固定快捷键说明，包括按住 `Shift` 临时显示、`R` 换色、`Z` 撤销、`C` 清空、`Space` 聚焦和 `Esc` 退出。
+
 ## 开机启动
 
 构建完成后，可以把这个应用加入 macOS 登录项：
@@ -50,10 +52,10 @@ cd /Users/mac/Desktop/7654/screen-annotator
 ## 打包 DMG
 
 ```bash
-./scripts/create_dmg.sh 0.1.4
+./scripts/create_dmg.sh 0.1.5
 ```
 
-生成文件会放在 `dist/ScreenAnnotator-0.1.4.dmg`。
+生成文件会放在 `dist/ScreenAnnotator-0.1.5.dmg`。
 
 ## 说明
 
