@@ -307,7 +307,7 @@ private final class SettingsWindowController: NSWindowController {
 
     private func fixedShortcuts() -> [[String]] {
         [
-            ["按住 Shift", "临时显示", "松开后自动清空并隐藏标注层"],
+            ["双击并按住 Option", "临时显示", "第二次松开后自动清空并隐藏标注层"],
             ["R", "切换颜色", "在红、黄、绿、蓝、紫之间循环"],
             ["Z", "撤销", "撤销上一个标注"],
             ["C", "清空", "清空当前所有标注"],
@@ -711,9 +711,15 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, SettingsWindow
     private var windows: [OverlayWindow] = []
     private var hotKeyRefs: [EventHotKeyRef] = []
     private var eventHandlerRef: EventHandlerRef?
-    private var shiftMonitor: Any?
-    private var localShiftMonitor: Any?
-    private var isShiftHoldActive = false
+    private var optionMonitor: Any?
+    private var localOptionMonitor: Any?
+    private var isOptionCurrentlyDown = false
+    private var isOptionDoubleHoldActive = false
+    private var optionPressHadNonModifierKey = false
+    private var optionPressStartedAt: TimeInterval?
+    private var lastStandaloneOptionTapAt: TimeInterval?
+    private let optionDoubleTapThreshold: TimeInterval = 0.45
+    private let standaloneOptionTapMaxDuration: TimeInterval = 0.35
     private var statusItem: NSStatusItem?
     private var settingsWindowController: SettingsWindowController?
 
@@ -721,7 +727,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, SettingsWindow
         NSApp.setActivationPolicy(.accessory)
         createWindows()
         createStatusItem()
-        installShiftHoldMonitors()
+        installOptionDoubleHoldMonitors()
         registerHotKey()
     }
 
@@ -732,11 +738,11 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, SettingsWindow
         if let eventHandlerRef {
             RemoveEventHandler(eventHandlerRef)
         }
-        if let shiftMonitor {
-            NSEvent.removeMonitor(shiftMonitor)
+        if let optionMonitor {
+            NSEvent.removeMonitor(optionMonitor)
         }
-        if let localShiftMonitor {
-            NSEvent.removeMonitor(localShiftMonitor)
+        if let localOptionMonitor {
+            NSEvent.removeMonitor(localOptionMonitor)
         }
     }
 
@@ -756,28 +762,76 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, SettingsWindow
         }
     }
 
-    private func installShiftHoldMonitors() {
-        shiftMonitor = NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+    private func markOptionPressAsShortcutUse() {
+        if isOptionCurrentlyDown {
+            optionPressHadNonModifierKey = true
+            lastStandaloneOptionTapAt = nil
+        }
+    }
+
+    private func installOptionDoubleHoldMonitors() {
+        optionMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.flagsChanged, .keyDown]) { [weak self] event in
             DispatchQueue.main.async {
-                self?.handleModifierFlags(event.modifierFlags)
+                self?.handleOptionDoubleHold(event)
             }
         }
-        localShiftMonitor = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
-            self?.handleModifierFlags(event.modifierFlags)
+        localOptionMonitor = NSEvent.addLocalMonitorForEvents(matching: [.flagsChanged, .keyDown]) { [weak self] event in
+            self?.handleOptionDoubleHold(event)
             return event
         }
     }
 
-    private func handleModifierFlags(_ flags: NSEvent.ModifierFlags) {
-        let relevantFlags = flags.intersection([.shift, .control, .option, .command])
-        let isShiftOnly = relevantFlags == .shift
+    private func handleOptionDoubleHold(_ event: NSEvent) {
+        if event.type == .keyDown {
+            if isOptionCurrentlyDown {
+                optionPressHadNonModifierKey = true
+            }
+            return
+        }
 
-        if isShiftOnly && !isShiftHoldActive {
-            isShiftHoldActive = true
-            showOverlay()
-        } else if !isShiftOnly && isShiftHoldActive {
-            isShiftHoldActive = false
+        guard event.type == .flagsChanged else { return }
+
+        let optionIsDown = event.modifierFlags.intersection(.deviceIndependentFlagsMask).contains(.option)
+        let now = event.timestamp
+
+        if optionIsDown && !isOptionCurrentlyDown {
+            beginOptionPress(at: now)
+        } else if !optionIsDown && isOptionCurrentlyDown {
+            endOptionPress(at: now)
+        }
+    }
+
+    private func beginOptionPress(at timestamp: TimeInterval) {
+        isOptionCurrentlyDown = true
+        optionPressStartedAt = timestamp
+        optionPressHadNonModifierKey = false
+
+        guard let lastTap = lastStandaloneOptionTapAt, timestamp - lastTap <= optionDoubleTapThreshold else {
+            return
+        }
+
+        lastStandaloneOptionTapAt = nil
+        isOptionDoubleHoldActive = true
+        showOverlay()
+    }
+
+    private func endOptionPress(at timestamp: TimeInterval) {
+        let wasDoubleHoldActive = isOptionDoubleHoldActive
+        let pressDuration = timestamp - (optionPressStartedAt ?? timestamp)
+
+        isOptionCurrentlyDown = false
+        isOptionDoubleHoldActive = false
+        optionPressStartedAt = nil
+
+        if wasDoubleHoldActive {
             clearAndHideOverlay()
+            return
+        }
+
+        if !optionPressHadNonModifierKey && pressDuration <= standaloneOptionTapMaxDuration {
+            lastStandaloneOptionTapAt = timestamp
+        } else {
+            lastStandaloneOptionTapAt = nil
         }
     }
 
@@ -897,6 +951,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, SettingsWindow
 
                 let delegate = Unmanaged<AppDelegate>.fromOpaque(userData).takeUnretainedValue()
                 DispatchQueue.main.async {
+                    delegate.markOptionPressAsShortcutUse()
                     switch hotKeyID.id {
                     case 1:
                         delegate.activateMode(.rectangle)
